@@ -1,0 +1,5 @@
+TODO:
+====
+
+1. Plot smiple charts using data from apache.builds.org
+2. Data should be stored in, retrieved from sqlite3 and mysql databaes
