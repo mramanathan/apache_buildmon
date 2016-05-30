@@ -14,3 +14,8 @@ Python code uses the REST APIs exposed at builds.apache.org and plot pacman char
 ...
 
 ### Sample notebooks to show howto use the two Jenkins related modules in Python
+
+### 30-May-2016: 
+
+### Example code for mysql connect, howto retrieve job names and details about 
+### individual jobs using Jenkinsapi
