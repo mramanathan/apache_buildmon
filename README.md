@@ -19,3 +19,8 @@ Python code uses the REST APIs exposed at builds.apache.org and plot pacman char
 
 ### Example code for mysql connect, howto retrieve job names and details about 
 ### individual jobs using Jenkinsapi
+
+### 31-May-2016: 
+
+### Example code for mysql connect and store build data taken from builds.apache.org
+### project name and it'surl is the build data extracted using jenkinsapi
