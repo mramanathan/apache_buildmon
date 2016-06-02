@@ -24,3 +24,7 @@ Python code uses the REST APIs exposed at builds.apache.org and plot pacman char
 
 ### Example code for mysql connect and store build data taken from builds.apache.org
 ### project name and it'surl is the build data extracted using jenkinsapi
+
+### 1-Jun-2016:
+
+### Same as above, now included build id and url as well, in a separate mysql table.
