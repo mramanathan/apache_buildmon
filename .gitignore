@@ -1,2 +1,8 @@
 # IPython Notebook
 .ipynb_checkpoints
+
+# PyCharm IDE artefact
+*.idea
+
+# Python compiled files
+*.pyc
