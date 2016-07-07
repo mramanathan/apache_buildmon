@@ -4,25 +4,54 @@
 
 from urllib2 import urlopen
 import re
-#import collections
+import sys
+import collections
 
-#projectData = collections.OrderedDict()
 
 class Citool(object):
     
+    # Base class that implements query of Tcloud jenkins
+    
     def __init__(self):
         
+        # URL parts that shall be used by the various methods
+        
         self.pyapi = 'api/python?pretty=true'
-#        self.buildurl = 'https://builds.apache.org/'
         self.buildurl = 'https://tcloud6-sofia.rds.intel.com/b/'
         
-    def queryAll(self):
         
-        apache_projects = eval(urlopen(self.buildurl + self.pyapi).read())
+        
+    def query(self, *thisProject):
+        
+        """ If 'thisProject' is empty, list all project names setup in Tcloud Jenkins
+        
+        If 'thisProject' is invalid, quit with message.
+        If 'thisProject' is given, return project's tcloud jenkins URL.
+        """
+        
+        allProjects = eval(urlopen(self.buildurl + self.pyapi).read())
+        
+        if len(thisProject) == 0:
+            for project in allProjects['jobs']:
+                print project.get('name')
+            return ''
+        elif thisProject[0]:
+            print("Checking %s in project list..." %(thisProject[0]))
+            for i in allProjects['jobs']:
+                if thisProject[0] == i['name']:
+                    print("Matched {0} with {1}".format(thisProject[0], i['name']))
+                    print("Project URL to access more info is {}".format(i['url']))
+                    return i['url']
+            else:
+                print("Invalid project, %s, exiting now." %(thisProject[0]))
+                return ''
+                sys.exit()
 
-        return apache_projects
+
     
     def getBuildCause(self, buildInfo):
+        
+        # From 'buildInfo' data structure, return the event that triggered the build.
         
         self.buildInfo = buildInfo
         
@@ -40,56 +69,78 @@ class Citool(object):
         
         return buildCause
     
-    def showBuildStatus(self, projectName, projectUrl):
+    
+    
+    def showLatestBuild(self, projectInfo):
         
-        self.projectName = projectName
-        self.projectUrl  = projectUrl
+        """ Using the 'projectInfo' (REST API output), get the following:
         
-        newBuildurl = self.projectUrl + "/" + self.pyapi
-        thisProject = eval(urlopen(newBuildurl).read())
+        URL of the last completed build and what event triggered this build.
+        """
         
-        print("Last completed build of {0} is {1}".format(self.projectName, thisProject['lastCompletedBuild']['url']))
-        lastBuildUrl = eval(urlopen(thisProject['lastCompletedBuild']['url'] + self.pyapi).read())
-        startedBy = self.getBuildCause(lastBuildUrl)
-        if lastBuildUrl['building'] == False and lastBuildUrl['result'] == "SUCCESS":
+        print("Last completed build of {0} is {1}".format(self.projectName, projectInfo['lastCompletedBuild']['url']))
+        lastBuildInfo = eval(urlopen(projectInfo['lastCompletedBuild']['url'] + self.pyapi).read())
+        
+        startedBy = self.getBuildCause(lastBuildInfo)
+        if lastBuildInfo['building'] == False and lastBuildInfo['result'] == "SUCCESS":
             print("Build was started by {0}".format(startedBy))
             print("And the build passed without any errors")
-        if lastBuildUrl['building'] == False and lastBuildUrl['result'] == "FAILURE":
+        if lastBuildInfo['building'] == False and lastBuildInfo['result'] == "FAILURE":
             print("Build was started by {0}".format(startedBy))
             print("And the build failed with errors")
-        if lastBuildUrl['building'] == False and lastBuildUrl['result'] == "ABORTED":
+        if lastBuildInfo['building'] == False and lastBuildInfo['result'] == "ABORTED":
             print("Build was started by {0}".format(startedBy))
             print("And the build was aborted")
         
         return ''
     
     
-#hadoopList = {}
+    def showLastTen(self, projectInfo):
+        
+        """ Using the 'projectInfo' (REST API output), get the following:
+        
+        short stat on the completion status of the last 10 builds for this project.
+        """
+        
+        counter = 1
+        buildStats = collections.OrderedDict()
+        buildUrls = []
+        buildResult = []
+        
+        allBuilds = projectInfo['builds']
+        
+        for b in allBuilds:
+            if counter <= 10:
+                thisBuildInfo = eval(urlopen(b['url'] + self.pyapi).read())
+                buildUrls.append(b['url'])
+                if thisBuildInfo['building'] == True:
+                    buildResult.append("Build in progress")
+                else:
+                    buildResult.append(thisBuildInfo['result'])
+            counter += 1
+            
+        for job, status in zip(buildUrls, buildResult):
+            print("Status of build job, {0} is, {1}".format(job, status))
+            buildStats.update({job : status})
+            
+        return ''
+    
+    
+    def showBuildStatus(self, projectName):
+        
+        """ For 'projectName', query tcloud jenkins and extract details
+        
+        of the staus of last completed build and short statistics of
+        the last 10 completed builds.
+        """
+        
+        self.projectName = projectName
+        projectUrl = self.query(self.projectName)
+        
+        newBuildurl = projectUrl + "/" + self.pyapi
+        projectInfo = eval(urlopen(newBuildurl).read())
+        
+        self.showLatestBuild(projectInfo)
+        self.showLastTen(projectInfo)
 
-#for thisJob in apache_projects['jobs']:
-#    if "Hadoop" in thisJob['name']:
-#        print "\n== Project URL : ", thisJob['url']
-#        hadoopList.update({thisJob['name'] : thisJob['url']})
-
-
-#print hadoopList
-
-#print("Apache has {0} Hadoop projects.".format(len(hadoopList.keys())))
-
-#dir(hadoopList)
-
-#hadoop_active_projects = {}
-
-#for hadoopi in hadoopList.iterkeys():
-#    # print hadoopList[hadoopi]
-#    hadoopPyapi = eval(urlopen(hadoopList[hadoopi] + pyApi).read())
-#    try:
-#        print("Last completed build of {0} is {1}".format(hadoopi, hadoopPyapi['lastCompletedBuild']['url']))
-#        hadoop_active_projects.update({hadoopi : hadoopPyapi['lastCompletedBuild']['url']})
-#    except TypeError, ex:
-#        print("No valid build data available for {0}".format(hadoopi))
-
-
-#for hadoopi in hadoop_active_projects.iterkeys():
-#    hadoopPyapi = eval(urlopen(hadoop_active_projects[hadoopi] + pyApi).read())
-#    print("Build status of the active project, {0} is : {1}".format(hadoopi, hadoopPyapi['result']))
+        return ''
