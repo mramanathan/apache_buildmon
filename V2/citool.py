@@ -17,7 +17,7 @@ class Citool(object):
         # URL parts that shall be used by the various methods
         
         self.pyapi = 'api/python?pretty=true'
-        self.buildurl = 'https://tcloud6-sofia.rds.intel.com/b/'
+        self.buildurl = 'https://builds.apache.org/'
         
         
         
@@ -92,6 +92,7 @@ class Citool(object):
             print("Build was started by {0}".format(startedBy))
             print("And the build was aborted")
         
+<<<<<<< 595b0812dd24bd6b3b678c87dca955363338ae2e:V2/citool_query.py
         return ''
     
     
