@@ -2,7 +2,7 @@
 
 # -*- coding: utf-8 -*-
 
-from urllib2 import urlopen
+import urllib2
 import re
 import sys
 import collections
@@ -12,14 +12,22 @@ class Citool(object):
     
     # Base class that implements query of Tcloud jenkins
     
-    def __init__(self):
+    def __init__(self, proxyset):
         
         # URL parts that shall be used by the various methods
+        # If proxy is set, then change proxy URL to match your corporate's setting
+        # Works for Python v2.7.x, not tried for v3.x
         
         self.pyapi = 'api/python?pretty=true'
         self.buildurl = 'https://builds.apache.org/'
+        self.proxyset = proxyset
         
-        
+        if self.proxyset == "ON":
+            # proxy settings for urllib2
+            proxy = urllib2.ProxyHandler({'https' : 'proxy-chain.intel.com:911'})
+            opener = urllib2.build_opener(proxy)
+            urllib2.install_opener(opener)
+
         
     def query(self, *thisProject):
         
@@ -29,7 +37,7 @@ class Citool(object):
         If 'thisProject' is given, return project's tcloud jenkins URL.
         """
         
-        allProjects = eval(urlopen(self.buildurl + self.pyapi).read())
+        allProjects = eval(urllib2.urlopen(self.buildurl + self.pyapi).read())
         
         if len(thisProject) == 0:
             for project in allProjects['jobs']:
@@ -79,7 +87,7 @@ class Citool(object):
         """
         
         print("Last completed build of {0} is {1}".format(self.projectName, projectInfo['lastCompletedBuild']['url']))
-        lastBuildInfo = eval(urlopen(projectInfo['lastCompletedBuild']['url'] + self.pyapi).read())
+        lastBuildInfo = eval(urllib2.urlopen(projectInfo['lastCompletedBuild']['url'] + self.pyapi).read())
         
         startedBy = self.getBuildCause(lastBuildInfo)
         if lastBuildInfo['building'] == False and lastBuildInfo['result'] == "SUCCESS":
@@ -92,7 +100,6 @@ class Citool(object):
             print("Build was started by {0}".format(startedBy))
             print("And the build was aborted")
         
-<<<<<<< 595b0812dd24bd6b3b678c87dca955363338ae2e:V2/citool_query.py
         return ''
     
     
@@ -112,7 +119,7 @@ class Citool(object):
         
         for b in allBuilds:
             if counter <= 10:
-                thisBuildInfo = eval(urlopen(b['url'] + self.pyapi).read())
+                thisBuildInfo = eval(urllib2.urlopen(b['url'] + self.pyapi).read())
                 buildUrls.append(b['url'])
                 if thisBuildInfo['building'] == True:
                     buildResult.append("Build in progress")
@@ -139,7 +146,7 @@ class Citool(object):
         projectUrl = self.query(self.projectName)
         
         newBuildurl = projectUrl + "/" + self.pyapi
-        projectInfo = eval(urlopen(newBuildurl).read())
+        projectInfo = eval(urllib2.urlopen(newBuildurl).read())
         
         self.showLatestBuild(projectInfo)
         self.showLastTen(projectInfo)
