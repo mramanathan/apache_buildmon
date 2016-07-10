@@ -51,10 +51,11 @@ class Citool(object):
         If 'thisProject' is given, return project's tcloud jenkins URL.
         """
         
+        logging.debug("Python API for CI tool: %s" %(self.buildurl + self.pyapi))
         allProjects = eval(urllib2.urlopen(self.buildurl + self.pyapi).read())
         
         if len(thisProject) == 0:
-            logging.info("Dump the names of all projects hosted at builds.apache.org")
+            logging.info("Dumping the names of all projects hosted at builds.apache.org")
             for project in allProjects['jobs']:
                 print project.get('name')
             return ''
@@ -66,7 +67,7 @@ class Citool(object):
                     logging.info("Project URL to access more info is {}".format(i['url']))
                     return i['url']
             else:
-                logging.warning("Invalid project, %s, exiting now." %(thisProject[0]))
+                logging.error("Invalid project, %s, exiting now." %(thisProject[0]))
                 sys.exit()
 
 
