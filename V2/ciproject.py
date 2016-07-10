@@ -3,8 +3,6 @@
 # -*- coding: utf-8 -*-
 
 import argparse
-import logging
-import sys
 from citool import Citool
 
 
@@ -12,8 +10,7 @@ def projectInfo(projectName):
     
     # For 'projectName', get info about the last completed build and the last 10 builds.
     
-    jenkins = Citool(proxyset)
-    logging.info("Checking %s in project list..." %(projectName))
+    jenkins = Citool(proxyset, parsed_args.verbosity)
     jenkins.showBuildStatus(projectName)
     
     return ''
@@ -28,21 +25,11 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--show", metavar="project-name", action="store", help="List build status for the specified project")
     parsed_args = parser.parse_args()
 
-    if parsed_args.verbosity == 0:
-        logLevel = logging.INFO
-    if parsed_args.verbosity == 1:
-        logLevel = logging.WARNING
-    if parsed_args.verbosity == 2:
-        logLevel = logging.DEBUG
-
-    logFormat = "{{ %(asctime)s  == %(levelname)-8s  ==Module:%(module)s  Function:%(funcName)s Line:%(lineno)d }} %(message)s "
-    logging.basicConfig(level=logLevel, format=logFormat, datefmt='%m/%d/%Y %I:%M:%S %p')
-
     if parsed_args.proxy:
         proxyset = parsed_args.proxy.upper()
         
     if parsed_args.dump:
-        jenkins = Citool(proxyset)
+        jenkins = Citool(proxyset, parsed_args.verbosity)
         jenkins.query()
         
     if parsed_args.show:

@@ -6,27 +6,41 @@ import urllib2
 import re
 import sys
 import collections
+import logging
 
 
 class Citool(object):
     
     # Base class that implements query of Tcloud jenkins
     
-    def __init__(self, proxyset):
+    def __init__(self, proxyset, verbosity):
         
-        # URL parts that shall be used by the various methods
-        # If proxy is set, then change proxy URL to match your corporate's setting
-        # Works for Python v2.7.x, not tried for v3.x
+        """ URL parts that shall be used by the various methods
         
-        self.pyapi = 'api/python?pretty=true'
-        self.buildurl = 'https://builds.apache.org/'
-        self.proxyset = proxyset
+        If proxy is set, then change proxy URL to match your corporate's setting
+        Works with Python v2.7.x, not tried in v3.x
+        """
+        
+        self.pyapi     = 'api/python?pretty=true'
+        self.buildurl  = 'https://builds.apache.org/'
+        self.proxyset  = proxyset
+        self.verbosity = verbosity
         
         if self.proxyset == "ON":
             # proxy settings for urllib2
             proxy = urllib2.ProxyHandler({'https' : 'proxy-chain.intel.com:911'})
             opener = urllib2.build_opener(proxy)
             urllib2.install_opener(opener)
+
+        if self.verbosity == 0:
+            logLevel = logging.INFO
+        if self.verbosity == 1:
+            logLevel = logging.WARNING
+        if self.verbosity == 2:
+            logLevel = logging.DEBUG
+
+        logFormat = "{{ %(asctime)s  == %(levelname)-8s  ==Module:%(module)s  Function:%(funcName)s Line:%(lineno)d }} %(message)s "
+        logging.basicConfig(level=logLevel, format=logFormat, datefmt='%m/%d/%Y %I:%M:%S %p')
 
         
     def query(self, *thisProject):
@@ -40,19 +54,19 @@ class Citool(object):
         allProjects = eval(urllib2.urlopen(self.buildurl + self.pyapi).read())
         
         if len(thisProject) == 0:
+            logging.info("Dump the names of all projects hosted at builds.apache.org")
             for project in allProjects['jobs']:
                 print project.get('name')
             return ''
         elif thisProject[0]:
-            print("Checking %s in project list..." %(thisProject[0]))
+            logging.info("Checking %s in project list..." %(thisProject[0]))
             for i in allProjects['jobs']:
                 if thisProject[0] == i['name']:
-                    print("Matched {0} with {1}".format(thisProject[0], i['name']))
-                    print("Project URL to access more info is {}".format(i['url']))
+                    logging.info("Matched {0} with {1}".format(thisProject[0], i['name']))
+                    logging.info("Project URL to access more info is {}".format(i['url']))
                     return i['url']
             else:
-                print("Invalid project, %s, exiting now." %(thisProject[0]))
-                return ''
+                logging.warning("Invalid project, %s, exiting now." %(thisProject[0]))
                 sys.exit()
 
 
@@ -86,7 +100,7 @@ class Citool(object):
         URL of the last completed build and what event triggered this build.
         """
         
-        print("Last completed build of {0} is {1}".format(self.projectName, projectInfo['lastCompletedBuild']['url']))
+        logging.info("Last completed build of {0} is {1}".format(self.projectName, projectInfo['lastCompletedBuild']['url']))
         lastBuildInfo = eval(urllib2.urlopen(projectInfo['lastCompletedBuild']['url'] + self.pyapi).read())
         
         startedBy = self.getBuildCause(lastBuildInfo)
