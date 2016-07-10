@@ -149,6 +149,39 @@ class Citool(object):
         return ''
     
     
+    def showProjects(self, projectString):
+        
+        """ For 'projectString', query tcloud jenkins and list
+        
+        the names of those projects that contain 'projectString'.
+        """
+        
+        projects = []
+        matched  = []
+        
+        self.projectString = projectString
+        
+        logging.debug("Python API for CI tool: %s" %(self.buildurl + self.pyapi))
+        allProjects = eval(urllib2.urlopen(self.buildurl + self.pyapi).read())
+        
+        logging.info("Collecting names of all projects...")
+        for i in allProjects['jobs']:
+            projects.append(i['name'])
+            
+        logging.info("Checking %s in project list..." %(self.projectString))
+        lookupStr = re.compile(self.projectString, re.IGNORECASE)
+        for i in projects:
+            lookupResult = re.findall(lookupStr, i)
+            logging.debug("Lookup results: %s" %(lookupResult))
+            if len(lookupResult) != 0:
+                matched.append(i)
+            
+        for prj in matched:
+            print("{0} project matched with query string".format(prj))
+                
+        return ''
+    
+    
     def showBuildStatus(self, projectName):
         
         """ For 'projectName', query tcloud jenkins and extract details
