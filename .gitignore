@@ -6,3 +6,6 @@
 
 # Python compiled files
 *.pyc
+
+# sqlite3 db files
+*.db
