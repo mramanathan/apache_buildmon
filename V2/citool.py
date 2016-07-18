@@ -2,12 +2,13 @@
 
 # -*- coding: utf-8 -*-
 
-import urllib2
+import collections
+import json
+import logging
 import re
 import sys
-import collections
-import logging
 import time
+import urllib2
 
 
 class Citool(object):
@@ -22,10 +23,10 @@ class Citool(object):
         Works with Python v2.7.x, not tried in v3.x
         """
         
-        self.pyapi     = 'api/python?pretty=true'
-        self.buildurl  = 'https://builds.apache.org/'
-        self.proxyset  = proxyset
-        self.verbosity = verbosity
+        self.restapi     = 'api/json?pretty=true'
+        self.buildurl    = 'https://builds.apache.org/'
+        self.proxyset    = proxyset
+        self.verbosity   = verbosity
         
         if self.proxyset == "ON":
             # proxy settings for urllib2
@@ -52,8 +53,8 @@ class Citool(object):
         If 'thisProject' is given, return project's tcloud jenkins URL.
         """
         
-        logging.debug("Python API for CI tool: %s" %(self.buildurl + self.pyapi))
-        allProjects = eval(urllib2.urlopen(self.buildurl + self.pyapi).read())
+        logging.debug("REST API for CI tool: %s" %(self.buildurl + self.restapi))
+        allProjects = json.loads(urllib2.urlopen(self.buildurl + self.restapi).read())
         
         if len(thisProject) == 0:
             logging.info("Dumping the names of all projects hosted at builds.apache.org")
@@ -119,7 +120,7 @@ class Citool(object):
         """
         
         logging.info("Last completed build of {0} is {1}".format(self.projectName, projectInfo['lastCompletedBuild']['url']))
-        lastBuildInfo = eval(urllib2.urlopen(projectInfo['lastCompletedBuild']['url'] + self.pyapi).read())
+        lastBuildInfo = json.loads(urllib2.urlopen(projectInfo['lastCompletedBuild']['url'] + self.restapi).read())
         
         buildStartedAt, buildEndedAt = self.getBuildTime(lastBuildInfo)
         startedBy = self.getBuildCause(lastBuildInfo)
@@ -152,7 +153,7 @@ class Citool(object):
         
         for b in allBuilds:
             if counter <= 10:
-                thisBuildInfo = eval(urllib2.urlopen(b['url'] + self.pyapi).read())
+                thisBuildInfo = json.loads(urllib2.urlopen(b['url'] + self.restapi).read())
                 buildUrls.append(b['url'])
                 if thisBuildInfo['building'] == True:
                     buildResult.append("Build in progress")
@@ -179,8 +180,8 @@ class Citool(object):
         
         self.projectString = projectString
         
-        logging.debug("Python API for CI tool: %s" %(self.buildurl + self.pyapi))
-        allProjects = eval(urllib2.urlopen(self.buildurl + self.pyapi).read())
+        logging.debug("REST API for CI tool: %s" %(self.buildurl + self.restapi))
+        allProjects = json.loads(urllib2.urlopen(self.buildurl + self.restapi).read())
         
         logging.info("Collecting names of all projects...")
         for i in allProjects['jobs']:
@@ -211,8 +212,8 @@ class Citool(object):
         self.projectName = projectName
         projectUrl = self.query(self.projectName)
         
-        newBuildurl = projectUrl + "/" + self.pyapi
-        projectInfo = eval(urllib2.urlopen(newBuildurl).read())
+        newBuildurl = projectUrl + "/" + self.restapi
+        projectInfo = json.loads(urllib2.urlopen(newBuildurl).read())
         
         self.showLatestBuild(projectInfo)
         self.showLastTen(projectInfo)
