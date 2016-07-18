@@ -7,6 +7,7 @@ import re
 import sys
 import collections
 import logging
+import time
 
 
 class Citool(object):
@@ -72,13 +73,29 @@ class Citool(object):
 
 
     
+    def getBuildTime(self, buildInfo):
+        
+        # From 'buildInfo' data structure, return the start and completion time.
+        
+        self.buildInfo = buildInfo
+        
+        unixtime = self.buildInfo['timestamp']
+        duration = self.buildInfo['duration']
+        
+        startTime = time.strftime('%a %b %d %H:%M:%S', time.gmtime(unixtime/1000))
+        runTime   = time.strftime('%H:%M:%S', time.gmtime(duration/1000))
+        
+        return (startTime, runTime)
+    
+    
+    
     def getBuildCause(self, buildInfo):
         
         # From 'buildInfo' data structure, return the event that triggered the build.
         
         self.buildInfo = buildInfo
         
-        for i in buildInfo['actions']:
+        for i in self.buildInfo['actions']:
             if i.has_key('causes'):
                 causeInfo = i['causes']
                 break
@@ -104,15 +121,16 @@ class Citool(object):
         logging.info("Last completed build of {0} is {1}".format(self.projectName, projectInfo['lastCompletedBuild']['url']))
         lastBuildInfo = eval(urllib2.urlopen(projectInfo['lastCompletedBuild']['url'] + self.pyapi).read())
         
+        buildStartedAt, buildEndedAt = self.getBuildTime(lastBuildInfo)
         startedBy = self.getBuildCause(lastBuildInfo)
         if lastBuildInfo['building'] == False and lastBuildInfo['result'] == "SUCCESS":
-            print("Build was started by {0}".format(startedBy))
+            print("Build was started by {0} at {1} and completed in {2}".format(startedBy, buildStartedAt, buildEndedAt))
             print("And the build passed without any errors")
         if lastBuildInfo['building'] == False and lastBuildInfo['result'] == "FAILURE":
-            print("Build was started by {0}".format(startedBy))
+            print("Build was started by {0} at {1} and completed in {2}".format(startedBy, buildStartedAt, buildEndedAt))
             print("And the build failed with errors")
         if lastBuildInfo['building'] == False and lastBuildInfo['result'] == "ABORTED":
-            print("Build was started by {0}".format(startedBy))
+            print("Build was started by {0} at {1} and completed in {2}".format(startedBy, buildStartedAt, buildEndedAt))
             print("And the build was aborted")
         
         return ''
