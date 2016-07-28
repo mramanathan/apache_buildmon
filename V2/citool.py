@@ -23,7 +23,7 @@ class Citool(object):
         """
         
         self.pyapi     = 'api/python?pretty=true'
-        self.buildurl  = 'https://builds.apache.org/'
+        self.buildurl  = 'https://ci.linaro.org/'
         self.proxyset  = proxyset
         self.verbosity = verbosity
         
