@@ -11,7 +11,7 @@ import logging
 
 class Citool(object):
     
-    # Base class that implements query of Tcloud jenkins
+    # Base class that implements query of jenkins
     
     def __init__(self, proxyset, verbosity):
         
@@ -28,7 +28,7 @@ class Citool(object):
         
         if self.proxyset == "ON":
             # proxy settings for urllib2
-            proxy = urllib2.ProxyHandler({'https' : 'proxy-chain.intel.com:911'})
+            proxy = urllib2.ProxyHandler({'https' : 'proxy-url-domain-name.com:port_number'})
             opener = urllib2.build_opener(proxy)
             urllib2.install_opener(opener)
 
